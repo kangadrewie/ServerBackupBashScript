@@ -1,0 +1,4 @@
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu----- -----timestamp-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st                 UTC
+ 0  0      0  44016  37560 341788    0    0     1     4    2    7  0  0 100  0  0 2020-03-29 22:07:04
+ 0  0      0  44040  37560 341780    0    0     0     0   35   55  0  0 100  0  0 2020-03-29 22:07:07
