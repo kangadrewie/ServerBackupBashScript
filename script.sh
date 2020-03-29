@@ -4,6 +4,8 @@ HEIGHT=15
 WIDTH=40
 BACKTITLE="Version Control and Audit 1.0 by Andrew Gorman"
 
+DIALOG_CANCEL=1
+
 #Backup new changes of directory
 backup() {
 	
@@ -14,24 +16,34 @@ backup() {
 	OPTIONS=(1 "Backup Directory Location"
 		 2 "Backup Status"
 		 3 "Backup Timer"
+		 4 "Backup History"
 		 )	
 
 	CHOICE=$(dialog --clear \
+				--cancel-label "Go Back" \
                 --backtitle "$BACKTITLE" \
                 --title "$TITLE" \
                 --menu "$MENU" \
                 $HEIGHT $WIDTH $CHOICE_HEIGHT \
                 "${OPTIONS[@]}" \
-                2>&1 >/dev/tty)
+                2>&1 > /dev/tty)
+
+	EXIT=$?
+
+	case $EXIT in
+		$DIALOG_CANCEL)
+			gui
+			;;
+	esac 
 
 	case $CHOICE in
 		
 		#Change directory location of Backup
 		1)
 			INPUT=$(\dialog --title "Backup Directory" \
-         			    --inputbox "Enter the directory name:" 8 40 \
-  				    3>&1 1>&2 2>&3 3>&- \
-			)
+		          			    --inputbox "Enter the directory name:" 8 40 \
+							   				    3>&1 1>&2 2>&3 3>&- \
+											 			)	
 			NON_ESCAPED_INPUT=$INPUT
 			INPUT=$(sed 's|/|\\/|g' <<< $INPUT)
 			sed -i "s/^BACKUP_PATH.*/BACKUP_PATH=${INPUT}/" /home/ubuntu/backup.sh
@@ -39,7 +51,7 @@ backup() {
 			dialog --msgbox "Backup Directory has been changed to ${NON_ESCAPED_INPUT}. This will take affect when backup runs again." 15 40
 			gui
 			;;
-
+		
 		#Check Backup status
 		2)
 			
@@ -49,6 +61,12 @@ backup() {
 		3)
 			
 			;;
+
+		4)
+			dialog --textbox /home/ubuntu/BackupLog.txt 50 80
+			gui
+			;;
+ 
 	esac
 
 }
@@ -64,21 +82,29 @@ auditLog() {
          	 3 "Search User Audit")
 
 	CHOICE=$(dialog --clear \
+				--cancel-label "Go Back" \
                 --backtitle "$BACKTITLE" \
                 --title "$TITLE" \
                 --menu "$MENU" \
                 $HEIGHT $WIDTH $CHOICE_HEIGHT \
                 "${OPTIONS[@]}" \
                 2>&1 >/dev/tty)
-
-	clear
+				
+				EXIT=$?
+				
+				case $EXIT in
+					$DIALOG_CANCEL)
+						gui
+						;;
+				esac
 
 	case $CHOICE in
 		1)
 			#Generate Full Audit Report to text file
 			sudo ausearch -f /var/www/html/Intranet/ > /home/ubuntu/AuditLog.txt
 			dialog --textbox /home/ubuntu/AuditLog.txt 50 80
-			dialog --infobox "A .txt report is available and can be viewed on /home/ubuntu/AuditLog.txt" 50 80
+
+			dialog --msgbox "A .txt report is available and can be viewed on /home/ubuntu/AuditLog.txt" 8 40 
 			gui
 			;;
 		2)
@@ -153,6 +179,7 @@ gui() {
 		 6 "Push Changes")	
 
 	CHOICE=$(dialog --clear \
+				--cancel-label "Exit" \
                 --backtitle "$BACKTITLE" \
                 --title "$TITLE" \
                 --menu "$MENU" \
