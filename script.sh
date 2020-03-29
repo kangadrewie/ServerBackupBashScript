@@ -6,8 +6,6 @@ BACKTITLE="Version Control and Audit 1.0 by Andrew Gorman"
 
 #Backup new changes of directory
 backup() {
-	#dt=`date '+%d-%m-%Y_%H:%M:%S'`
-	#zip -r /home/ubuntu/backups/$dt.zip /var/www/html/Live
 	
 	TITLE="Backup Options"
 	MENU="Choose one of the following options:"
@@ -28,23 +26,28 @@ backup() {
 
 	case $CHOICE in
 		
+		#Change directory location of Backup
 		1)
 			INPUT=$(\dialog --title "Backup Directory" \
          			    --inputbox "Enter the directory name:" 8 40 \
   				    3>&1 1>&2 2>&3 3>&- \
 			)
-			
+			NON_ESCAPED_INPUT=$INPUT
 			INPUT=$(sed 's|/|\\/|g' <<< $INPUT)
-
 			sed -i "s/^BACKUP_PATH.*/BACKUP_PATH=${INPUT}/" /home/ubuntu/backup.sh
-			#sed -i "s/^BACKUP_PATH.*/BACKUP_PATH=${INPUT}/" /home/ubuntu/backup.sh
-			#sed -i 's/^BACKUP_PATH.*/BACKUP_PATH="\/var\/www\/html\/Live"/' /home/ubuntu/backup.sh
+
+			dialog --msgbox "Backup Directory has been changed to ${NON_ESCAPED_INPUT}. This will take affect when backup runs again." 15 40
+			gui
 			;;
+
+		#Check Backup status
 		2)
-			backup
+			
 			;;
+
+		#Change time of backup
 		3)
-			apacheStatus
+			
 			;;
 	esac
 
@@ -55,8 +58,7 @@ auditLog() {
 
 	TITLE="Audit Logging"
 	MENU="Choose one of the following options:"
-	CHOICE_HEIGHT=3
-	
+	CHOICE_HEIGHT=3 
 	OPTIONS=(1 "Generate Full Audit"
         	 2 "Summary Report"
          	 3 "Search User Audit")
@@ -75,12 +77,14 @@ auditLog() {
 		1)
 			#Generate Full Audit Report to text file
 			sudo ausearch -f /var/www/html/Intranet/ > /home/ubuntu/AuditLog.txt
+			dialog --textbox /home/ubuntu/AuditLog.txt 50 80
+			dialog --infobox "A .txt report is available and can be viewed on /home/ubuntu/AuditLog.txt" 50 80
+			gui
 			;;
 		2)
 			#Generate Summary Report
-			sudo ausearch -f /var/www/html/Intranet > /home/ubuntu/SummaryReport.txt| aureport -f -i
-
-			dialog --programbox 50 80 | sudo ausearch -f /var/www/html/Intranet > /home/ubuntu/SummaryReport.txt| aureport -f -i
+			sudo ausearch -f /var/www/html/Intranet | aureport -f -i > /home/ubuntu/SummaryReport.txt
+			dialog --textbox /home/ubuntu/SummaryReport.txt 50 80
 			gui 
 			;;
 		3)
@@ -106,13 +110,30 @@ auditLog() {
 
 #}
 
+#Check Apache2 Status
 apacheStatus() {
-	dialog --infobox "$(sudo systemctl status apache2)" 50 80
+	dialog --msgbox "$(sudo systemctl status apache2)" 50 80
 	gui
 }
 
-healthReport() {
+#Check server processes
+serverProcesses() {
 	sudo htop
+	gui
+}
+
+#System Health Check
+systemHealth() {
+	#Generate System Health Log
+	#sudo vmstat -t 3 5 >> /home/ubuntu/SystemHealth.txt
+	dialog --infobox "Please wait a moment." 8 40
+
+   	echo "" >> /home/ubuntu/SystemHealth.txt
+	date >> /home/ubuntu/SystemHealth.txt	
+	
+	sudo vmstat -t 3 5 >> /home/ubuntu/SystemHealth.txt
+	sleep 1
+	dialog --textbox /home/ubuntu/SystemHealth.txt 50 80
 	gui
 }
 
@@ -122,13 +143,14 @@ gui() {
 	
 	TITLE="Main Menu"
 	MENU="Choose one of the following options:"
-	CHOICE_HEIGHT=4
+	CHOICE_HEIGHT=6
 		
 	OPTIONS=(1 "Audit Logging"
 		 2 "Backup"
 		 3 "Apache Status"
 		 4 "Server Processes"
-		 5 "Push Changes")	
+		 5 "System Health"
+		 6 "Push Changes")	
 
 	CHOICE=$(dialog --clear \
                 --backtitle "$BACKTITLE" \
@@ -150,14 +172,13 @@ gui() {
 			apacheStatus
 			;;
 		4)
-			healthReport
+			serverProcesses
 			;;
 		5)
-			pushChanges
+			systemHealth
 			;;
 	esac
  
 }
 
 gui
-
