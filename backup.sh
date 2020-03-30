@@ -20,11 +20,12 @@ sudo chmod 000 /var/www/html/Intranet
 sudo cp -u -r /var/www/html/Intranet/. $BACKUP_PATH
 
 #Change permissions back to Intranet Folder to read and write
-sudo chmod 744 /var/www/html/Intranet
+sudo chmod 0666 /var/www/html/Intranet
 #Change Permission back to Live Folder to read only
 sudo chmod 0444 $BACKUP_PATH
 
 
 #Generate Health Report
+sudo mkdir /home/ubuntu/HealthReports/
 sudo chmod 744 /home/ubuntu/HealthReports/
 sudo vmstat -t 3 5 > /home/ubuntu/HealthReports/$dt.txt 
